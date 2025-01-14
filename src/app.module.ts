@@ -11,6 +11,7 @@ import { UserRecordRepository, UserRepository } from './repositories'
 import { CustomField, User, UserRecord } from './entities'
 import { JwtStrategy } from './decorators/PublicDecorator'
 import { AuthController } from './controllers/AuthController'
+import { CustomFieldRepository } from './repositories/CustomFieldRepository'
 
 @Module({
   imports: [
@@ -42,6 +43,6 @@ import { AuthController } from './controllers/AuthController'
     }),
   ],
   controllers: [UserRecordController, AuthController],
-  providers: [UserRecordService, UserRecordRepository, UserService, UserRepository, JwtStrategy],
+  providers: [UserRecordService, UserRecordRepository, UserService, UserRepository, JwtStrategy, CustomFieldRepository],
 })
 export class AppModule {}

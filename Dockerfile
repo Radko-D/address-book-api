@@ -33,7 +33,13 @@ COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-
+ENV JWT_SECRET=bc00c05ea9b05e0ba56fd3adb3807f5fddb671febd42418305c201e9eab16a67
+ENV JWT_REFRESH_SECRET=a0e4d09d5d1a4db91aaf945a3e0934eec699a0c3aaa793230808cd328a625063
+ENV DB_HOST=35.204.106.152
+ENV DB_PORT=5432
+ENV DB_USERNAME=postgres
+ENV DB_PASSWORD=DO0GB<rl2@;t`Rq^
+ENV DB_DATABASE=postgres
 
 # Switch to non-root user
 USER nestjs

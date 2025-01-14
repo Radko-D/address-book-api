@@ -3,18 +3,17 @@ import { AppModule } from './app.module'
 import { Reflector } from '@nestjs/core'
 import { JwtAuthGuard } from './guards/JwtAuthGuard'
 import * as cookieParser from 'cookie-parser'
-import * as cors from 'cors';
-
+import * as cors from 'cors'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.useGlobalGuards(new JwtAuthGuard(new Reflector()))
-  app.use(cookieParser())
+  app.use(cookieParser(process.env.JWT_REFRESH_SECRET))
   app.use(
     cors({
       origin: ['http://localhost:3000', 'http://localhost:5173'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie', 'Cookie'],
       credentials: true,
     }),
   )

@@ -21,7 +21,7 @@ export class UserRecord {
   @Column({ name: 'phone_number', type: 'text' })
   phoneNumber: string
 
-  @Column({ name: 'email', unique: true, type: 'text' })
+  @Column({ name: 'email', type: 'text' })
   email: string
 
   @Column({ name: 'fax_number', type: 'text' })

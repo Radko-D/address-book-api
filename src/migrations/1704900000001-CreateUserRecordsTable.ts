@@ -36,7 +36,6 @@ export class CreateUserRecordsTable1704900000001 implements MigrationInterface {
           {
             name: 'email',
             type: 'text',
-            isUnique: true,
           },
           {
             name: 'fax_number',

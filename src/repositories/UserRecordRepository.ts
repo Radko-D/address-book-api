@@ -24,7 +24,7 @@ export class UserRecordRepository {
     this.repository.delete(id)
   }
 
-  async getAllUserRecords(id: string): Promise<UserRecord[]> {
-    return this.repository.find({ where: { id } })
+  async getAllUserRecords(userId: string): Promise<UserRecord[]> {
+    return this.repository.find({ where: { userId } })
   }
 }
