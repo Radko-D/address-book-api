@@ -27,7 +27,7 @@ export class UserRecordService {
     this.userRecordRepository.updateUserRecord(recordId, record)
   }
 
-  async deleteRecord(recordId: string): Promise<void> {
-    await this.userRecordRepository.deleteUserRecord(recordId)
+  async deleteRecord(recordId: string, userId: string): Promise<void> {
+    await this.userRecordRepository.deleteUserRecord(recordId, userId)
   }
 }

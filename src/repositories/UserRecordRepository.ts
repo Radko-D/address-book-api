@@ -20,8 +20,8 @@ export class UserRecordRepository {
     this.repository.update(id, record)
   }
 
-  async deleteUserRecord(id: string): Promise<void> {
-    this.repository.delete(id)
+  async deleteUserRecord(id: string, userId: string): Promise<void> {
+    this.repository.delete({ id, userId })
   }
 
   async getAllUserRecords(userId: string): Promise<UserRecord[]> {
