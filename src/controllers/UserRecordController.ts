@@ -18,8 +18,8 @@ export class UserRecordController {
     this.userRecordService.createRecord(record)
   }
 
-  @Delete('delete/:recordId')
-  async deleteRecord(@Param('recordId') recordId: string, @User("id") userId: string): Promise<void> {
+  @Delete('delete')
+  async deleteRecord(@Body() { recordId }: { recordId: string }, @User('id') userId: string): Promise<void> {
     this.userRecordService.deleteRecord(recordId, userId)
   }
 }

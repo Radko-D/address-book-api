@@ -25,7 +25,7 @@ export class AuthController {
     response.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Use secure in production
-      sameSite: 'strict',
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
       path: '/api/auth/refresh', // Only sent to refresh endpoint
     })
