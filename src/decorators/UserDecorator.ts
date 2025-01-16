@@ -4,8 +4,6 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common'
 interface JwtPayload {
   id: string
   email: string
-  iat?: number
-  exp?: number
 }
 
 export const User = createParamDecorator((data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {

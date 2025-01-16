@@ -8,16 +8,16 @@ export class UserRecordRepository {
     private readonly repository: Repository<UserRecord>,
   ) {}
 
-  async getUserRecordById(id: string): Promise<UserRecord> {
-    return this.repository.findOne({ where: { id } })
+  async getUserRecordById(id: string, userId: string): Promise<UserRecord> {
+    return this.repository.findOne({ where: { id, userId } })
   }
 
   async createUserRecord(record: Partial<UserRecord>): Promise<UserRecord> {
     return this.repository.save(record)
   }
 
-  async updateUserRecord(id: string, record: Partial<UserRecord>): Promise<void> {
-    this.repository.update(id, record)
+  async updateUserRecord(id: string, userId: string, record: Partial<UserRecord>): Promise<void> {
+    await this.repository.update({ id, userId }, record)
   }
 
   async deleteUserRecord(id: string, userId: string): Promise<void> {

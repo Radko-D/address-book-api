@@ -14,6 +14,10 @@ export class UserRecordService {
     return await this.userRecordRepository.getAllUserRecords(userId)
   }
 
+  async getRecordById(recordId: string, userId: string): Promise<UserRecord> {
+    return await this.userRecordRepository.getUserRecordById(recordId, userId)
+  }
+
   async createRecord(record: Partial<UserRecord>): Promise<void> {
     const fullRecord = await this.userRecordRepository.createUserRecord(record)
     if (record.customFields) {
@@ -23,8 +27,8 @@ export class UserRecordService {
     }
   }
 
-  async updateRecord(recordId: string, record: Partial<UserRecord>): Promise<void> {
-    this.userRecordRepository.updateUserRecord(recordId, record)
+  async updateRecord(recordId: string, userId: string, record: Partial<UserRecord>): Promise<void> {
+    await this.userRecordRepository.updateUserRecord(recordId, userId,record)
   }
 
   async deleteRecord(recordId: string, userId: string): Promise<void> {

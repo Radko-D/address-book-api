@@ -8,10 +8,13 @@ import { UserRecordController } from './controllers/UserRecordController'
 import { UserRecordService } from './services/UserRecordService'
 import { UserService } from './services/UserService'
 import { UserRecordRepository, UserRepository } from './repositories'
-import { CustomField, User, UserRecord } from './entities'
+import { CustomField, Tag, User, UserRecord } from './entities'
 import { JwtStrategy } from './decorators/PublicDecorator'
 import { AuthController } from './controllers/AuthController'
 import { CustomFieldRepository } from './repositories/CustomFieldRepository'
+import { TagController } from './controllers/TagController'
+import { TagService } from './services'
+import { TagRepository } from './repositories/TagRepository'
 
 @Module({
   imports: [
@@ -27,11 +30,11 @@ import { CustomFieldRepository } from './repositories/CustomFieldRepository'
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, UserRecord, CustomField],
+        entities: [User, UserRecord, CustomField, Tag],
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, UserRecord, CustomField]),
+    TypeOrmModule.forFeature([User, UserRecord, CustomField, Tag]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -42,7 +45,7 @@ import { CustomFieldRepository } from './repositories/CustomFieldRepository'
       inject: [ConfigService],
     }),
   ],
-  controllers: [UserRecordController, AuthController],
-  providers: [UserRecordService, UserRecordRepository, UserService, UserRepository, JwtStrategy, CustomFieldRepository],
+  controllers: [UserRecordController, AuthController, TagController],
+  providers: [UserRecordService, UserRecordRepository, UserService, UserRepository, JwtStrategy, CustomFieldRepository, TagService, TagRepository],
 })
 export class AppModule {}
