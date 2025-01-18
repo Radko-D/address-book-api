@@ -1,99 +1,254 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Address Book API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The Address Book API is a NestJS-based application that provides a comprehensive contact management system. It allows users to create, manage, and organize contacts with features like custom fields, tagging, and various export options. The application uses PostgreSQL for data storage and implements JWT-based authentication.
 
-## Description
+## Technology Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Backend Framework: NestJS
+- Database: PostgreSQL
+- ORM: TypeORM
+- Authentication: JWT (JSON Web Tokens)
+- Export Formats: CSV, JSON, XLSX
 
-## Project setup
+## Core Entities
+
+### User
+
+The User entity represents system users who can manage their contacts. Each user has:
+
+- Unique ID (UUID)
+- Email (unique)
+- First Name
+- Last Name
+- Password (hashed)
+- Refresh Token
+- Created/Updated timestamps
+- Relationship with Tags
+
+### UserRecord (Contact)
+
+Represents a contact in the address book with fields:
+
+- First Name
+- Last Name (optional)
+- Company Name (optional)
+- Address (optional)
+- Phone Number
+- Email (optional)
+- Fax Number (optional)
+- Mobile Phone Number (optional)
+- Comment (optional)
+- Created/Updated timestamps
+- Relationships with Tags and Custom Fields
+
+### Tag
+
+Allows categorization of contacts:
+
+- Name
+- Color
+- User association
+- Created/Updated timestamps
+- Many-to-many relationship with UserRecords
+
+### CustomField
+
+Enables adding custom attributes to contacts:
+
+- Name
+- Value
+- Record association
+- Created/Updated timestamps
+
+## Authentication
+
+The API implements a secure authentication system using JWT with refresh tokens:
+
+### Endpoints
+
+- POST `/api/auth/login`: Authenticates user and returns access token
+- POST `/api/auth/refresh`: Refreshes access token using refresh token
+- POST `/api/auth/logout`: Invalidates refresh token
+- POST `/api/auth/register`: Creates new user account
+- PATCH `/api/auth/update`: Updates user profile
+
+### Security Features
+
+- Access tokens expire after 30 minutes
+- Refresh tokens expire after 7 days
+- HTTP-only cookies for refresh tokens
+- Password hashing using bcrypt
+- JWT-based route protection
+
+## API Endpoints
+
+### User Records (Contacts)
+
+- GET `/api/user-record`: Retrieves all records with pagination
+- GET `/api/user-record/:recordId`: Gets specific record
+- POST `/api/user-record`: Creates new record
+- POST `/api/user-record/update/:recordId`: Updates existing record
+- DELETE `/api/user-record/delete`: Deletes record
+- GET `/api/user-record/export-records`: Exports records in CSV/JSON/XLSX format
+
+#### Query Parameters for Records
+
+- `mostUsedTags`: Filter by most frequently used tags
+- `sameFirstNameDiffLastName`: Find records with same first name but different last names
+- `sameLastNameDiffFirstName`: Find records with same last name but different first names
+- `firstName`: Filter by first name
+- `lastName`: Filter by last name
+- `page`: Pagination page number
+- `limit`: Records per page
+
+### Tags
+
+- GET `/api/tag`: Lists all tags
+- POST `/api/tag`: Creates new tag
+- PATCH `/api/tag/:tagId`: Updates tag
+- DELETE `/api/tag/delete`: Deletes tag
+- POST `/api/tag/:tagId/records/:recordId`: Associates tag with record
+- DELETE `/api/tag/:tagId/records/:recordId`: Removes tag from record
+
+### Custom Fields
+
+- POST `/api/custom-field/:recordId`: Creates custom field for record
+- PATCH `/api/custom-field/:fieldId`: Updates custom field
+- DELETE `/api/custom-field/:fieldId`: Deletes custom field
+
+## Services
+
+### UserService
+
+Handles user-related operations:
+
+- User registration and profile management
+- Password hashing and verification
+- JWT token generation and management
+- Refresh token handling
+
+### UserRecordService
+
+Manages contact records:
+
+- CRUD operations for contacts
+- Record filtering and searching
+- Export functionality in multiple formats
+- Relationship management with tags
+
+### TagService
+
+Handles tag operations:
+
+- Tag creation and management
+- Association with records
+- Access control verification
+
+### CustomFieldService
+
+Manages custom fields:
+
+- Field creation and management
+- Validation of field ownership
+- Association with records
+
+## Data Access Layer
+
+### Repositories
+
+Each entity has a dedicated repository handling database operations:
+
+- UserRepository
+- UserRecordRepository
+- TagRepository
+- CustomFieldRepository
+
+## Error Handling
+
+The API implements comprehensive error handling with custom exceptions:
+
+- CustomFieldNotFoundException
+- UnauthorizedCustomFieldAccessException
+- TagNotFoundException
+- UnauthorizedTagAccessException
+- Various operation-specific exceptions
+
+## Data Export
+
+The API supports exporting contact data in multiple formats:
+
+- CSV: Comma-separated values format
+- JSON: JavaScript Object Notation format
+- XLSX: Excel spreadsheet format
+
+Export functionality includes:
+
+- All basic contact fields
+- Associated tags
+- Custom fields
+- Timestamps
+
+## Security Considerations
+
+- All routes except authentication endpoints require JWT authentication
+- Password hashing for user credentials
+- Refresh token rotation
+- CORS configuration for frontend access
+- HTTP-only cookies for sensitive tokens
+- User ownership validation for all operations
+
+## Database Management
+
+- TypeORM migrations for database schema management
+- Automatic timestamp handling
+- Cascading deletes for related entities
+- Foreign key constraints
+- UUID primary keys for security
+
+## Environment Configuration
+
+Required environment variables:
+
+- `DB_HOST`: Database host
+- `DB_PORT`: Database port
+- `DB_USERNAME`: Database username
+- `DB_PASSWORD`: Database password
+- `DB_DATABASE`: Database name
+- `JWT_SECRET`: Secret for access tokens
+- `JWT_REFRESH_SECRET`: Secret for refresh tokens
+- `PORT`: Application port (defaults to 3000)
+
+## Running the Application
 
 ```bash
-$ npm install
+# Installation
+npm install
+
+# Database migrations
+npm run migration:generate
+npm run migration:run
+
+# Development
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
 ```
 
-## Compile and run the project
+## Testing
+
+The application includes e2e testing setup:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
+# Unit tests
+npm run test
 
 # e2e tests
-$ npm run test:e2e
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Test coverage
+npm run test:cov
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
