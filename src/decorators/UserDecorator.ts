@@ -6,7 +6,7 @@ interface JwtPayload {
   email: string
 }
 
-export const User = createParamDecorator((data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {
+export const UserFromRequest = createParamDecorator((data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest()
   const user = request.user as JwtPayload
 

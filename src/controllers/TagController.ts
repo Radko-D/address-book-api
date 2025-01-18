@@ -1,16 +1,16 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, HttpStatus, NotFoundException, ForbiddenException } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, ForbiddenException, Patch } from '@nestjs/common'
 import { Tag } from '../entities'
-
-import { User } from '../decorators/UserDecorator'
 import { TagOperationException } from '../exceptions/TagException'
 import { TagService } from '../services'
+import { CreateTag } from '../models'
+import { UserFromRequest } from '../decorators/UserDecorator'
 
 @Controller('api/tag')
 export class TagController {
   constructor(private readonly tagService: TagService) {}
 
   @Get()
-  async getAllTags(@User('id') userId: string): Promise<Tag[]> {
+  async getAllTags(@UserFromRequest('id') userId: string): Promise<Tag[]> {
     if (!userId) {
       throw new ForbiddenException('User ID is required')
     }
@@ -18,13 +18,7 @@ export class TagController {
   }
 
   @Post()
-  async createTag(
-    @Body() tag: Partial<Tag>,
-    @User('id') userId: string
-  ): Promise<Tag> {
-    if (!userId) {
-      throw new ForbiddenException('User ID is required')
-    }
+  async createTag(@Body() tag: Partial<Tag>, @UserFromRequest('id') userId: string): Promise<Tag> {
     if (!tag.name || tag.name.trim() === '') {
       throw new TagOperationException('Tag name is required')
     }
@@ -34,10 +28,7 @@ export class TagController {
   }
 
   @Delete('delete')
-  async deleteTag(
-    @Body() { tagId }: { tagId: string },
-    @User('id') userId: string
-  ): Promise<void> {
+  async deleteTag(@Body() { tagId }: { tagId: string }, @UserFromRequest('id') userId: string): Promise<void> {
     if (!userId) {
       throw new ForbiddenException('User ID is required')
     }
@@ -48,15 +39,8 @@ export class TagController {
     await this.tagService.deleteTag(tagId, userId)
   }
 
-  @Put(':tagId')
-  async updateTag(
-    @Body() tag: Partial<Tag>,
-    @User('id') userId: string,
-    @Param('tagId') tagId: string
-  ): Promise<void> {
-    if (!userId) {
-      throw new ForbiddenException('User ID is required')
-    }
+  @Patch(':tagId')
+  async updateTag(@Body() tag: CreateTag, @UserFromRequest('id') userId: string, @Param('tagId') tagId: string): Promise<void> {
     if (!tagId) {
       throw new TagOperationException('Tag ID is required')
     }
@@ -68,12 +52,8 @@ export class TagController {
   }
 
   @Post(':tagId/records/:recordId')
-  async addTagToRecord(
-    @Param('tagId') tagId: string,
-    @Param('recordId') recordId: string,
-    @User('id') userId: string
-  ): Promise<void> {
-    if (!userId || !tagId || !recordId) {
+  async addTagToRecord(@Param('tagId') tagId: string, @Param('recordId') recordId: string, @UserFromRequest('id') userId: string): Promise<void> {
+    if (!tagId || !recordId) {
       throw new TagOperationException('All IDs are required')
     }
 
@@ -84,9 +64,9 @@ export class TagController {
   async removeTagFromRecord(
     @Param('tagId') tagId: string,
     @Param('recordId') recordId: string,
-    @User('id') userId: string
+    @UserFromRequest('id') userId: string,
   ): Promise<void> {
-    if (!userId || !tagId || !recordId) {
+    if (!tagId || !recordId) {
       throw new TagOperationException('All IDs are required')
     }
 

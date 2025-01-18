@@ -3,7 +3,6 @@ import { Tag } from '../entities'
 import { InjectRepository } from '@nestjs/typeorm'
 import { TagOperationException } from '../exceptions/TagException'
 
-
 export class TagRepository {
   constructor(
     @InjectRepository(Tag)
@@ -19,11 +18,8 @@ export class TagRepository {
   }
 
   async createTag(tag: Partial<Tag>): Promise<Tag> {
-    try {
-      return await this.repository.save(tag)
-    } catch (error) {
-      throw new TagOperationException('Failed to create tag')
-    }
+    const createdTag = this.repository.create(tag)
+    return await this.repository.save(createdTag)
   }
 
   async updateTag(id: string, userId: string, tag: Partial<Tag>): Promise<void> {
@@ -42,13 +38,10 @@ export class TagRepository {
 
   async deleteTag(id: string, userId: string): Promise<void> {
     try {
-      const result = await this.repository.createQueryBuilder()
-        .delete()
-        .where('id = :id AND userId = :userId', { id, userId })
-        .execute()
+      const result = await this.repository.createQueryBuilder().delete().where('id = :id AND userId = :userId', { id, userId }).execute()
 
       if (result.affected === 0) {
-        throw new TagOperationException('Tag not found or unauthorized')
+        throw new TagOperationException('Tag not found')
       }
     } catch (error) {
       if (error instanceof TagOperationException) {
@@ -60,11 +53,11 @@ export class TagRepository {
 
   async getAllTags(userId: string): Promise<Tag[]> {
     try {
-      return await this.repository.find({ 
+      return await this.repository.find({
         where: { userId },
-        order: { 
-          createdAt: 'DESC'
-        }
+        order: {
+          createdAt: 'DESC',
+        },
       })
     } catch (error) {
       throw new TagOperationException('Failed to fetch tags')
@@ -73,11 +66,7 @@ export class TagRepository {
 
   async addTagToRecord(tagId: string, recordId: string): Promise<void> {
     try {
-      await this.repository
-        .createQueryBuilder()
-        .relation(Tag, 'records')
-        .of(tagId)
-        .add(recordId)
+      await this.repository.createQueryBuilder().relation(Tag, 'records').of(tagId).add(recordId)
     } catch (error) {
       throw new TagOperationException('Failed to add tag to record')
     }
@@ -85,11 +74,7 @@ export class TagRepository {
 
   async removeTagFromRecord(tagId: string, recordId: string): Promise<void> {
     try {
-      await this.repository
-        .createQueryBuilder()
-        .relation(Tag, 'records')
-        .of(tagId)
-        .remove(recordId)
+      await this.repository.createQueryBuilder().relation(Tag, 'records').of(tagId).remove(recordId)
     } catch (error) {
       throw new TagOperationException('Failed to remove tag from record')
     }

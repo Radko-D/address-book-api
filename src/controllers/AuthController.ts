@@ -1,10 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException, Req, Res } from '@nestjs/common'
+import { Controller, Post, Body, UnauthorizedException, Req, Res, Patch } from '@nestjs/common'
 import { UserService } from '../services/UserService'
 import { Public } from '../decorators/PublicDecorator'
 import { User } from '../entities'
 import { JwtService } from '@nestjs/jwt'
 import { Request, Response } from 'express'
 import { ConfigService } from '@nestjs/config'
+import { UserFromRequest } from '../decorators/UserDecorator'
+import { UpdateUser } from '../models/UpdateUser'
 
 @Controller('api/auth')
 export class AuthController {
@@ -84,5 +86,10 @@ export class AuthController {
   @Post('register')
   async register(@Body() user: User) {
     this.userService.createUser(user)
+  }
+
+  @Patch('update')
+  async updateUser(@Body() user: UpdateUser, @UserFromRequest('id') userId: string) {
+    this.userService.updateUser(userId, user)
   }
 }

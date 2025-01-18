@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable, JoinColumn } from 'typeorm'
 import { CustomField } from './CustomField.entity'
 import { Tag } from './Tag.entity'
 
@@ -43,7 +43,8 @@ export class UserRecord {
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string
 
-  @OneToMany(() => CustomField, (customField) => customField.record)
+  @OneToMany(() => CustomField, (customField) => customField.record, { cascade: true })
+  @JoinColumn({ name: 'record_id' })
   customFields: CustomField[]
 
   @ManyToMany(() => Tag, (tag) => tag.records)

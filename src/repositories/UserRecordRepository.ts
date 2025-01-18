@@ -9,15 +9,16 @@ export class UserRecordRepository {
   ) {}
 
   async getUserRecordById(id: string, userId: string): Promise<UserRecord> {
-    return this.repository.findOne({ where: { id, userId } })
+    return this.repository.findOne({ where: { id, userId }, relations: ['tags', 'customFields'] })
   }
 
   async createUserRecord(record: Partial<UserRecord>): Promise<UserRecord> {
     return this.repository.save(record)
   }
 
-  async updateUserRecord(id: string, userId: string, record: Partial<UserRecord>): Promise<void> {
-    await this.repository.update({ id, userId }, record)
+  async updateUserRecord(id: string, userId: string, record: Partial<UserRecord>): Promise<UserRecord> {
+    const result = await this.repository.update({ id, userId }, record)
+    return result.raw
   }
 
   async deleteUserRecord(id: string, userId: string): Promise<void> {
@@ -25,6 +26,6 @@ export class UserRecordRepository {
   }
 
   async getAllUserRecords(userId: string): Promise<UserRecord[]> {
-    return this.repository.find({ where: { userId } })
+    return this.repository.find({ where: { userId }, relations: ['tags', 'customFields'] })
   }
 }

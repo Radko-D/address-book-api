@@ -18,6 +18,9 @@ export class CustomField {
   @Column({ name: 'updated_at', type: 'timestamp' })
   updatedAt: Date
 
+  @Column({ name: 'record_id', type: 'uuid' })
+  recordId: string
+
   @ManyToOne(() => UserRecord, (record) => record.customFields)
   @JoinColumn({ name: 'record_id', referencedColumnName: 'id' })
   record: UserRecord

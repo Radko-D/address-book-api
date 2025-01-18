@@ -1,0 +1,10 @@
+dist
+env.yaml
+package-lock.json
+.*
+*.spec.ts
+tsconfig*
+jest*
+README.md
+Dockerfile
+nest-cli.json

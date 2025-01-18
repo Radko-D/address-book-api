@@ -13,8 +13,9 @@ import { JwtStrategy } from './decorators/PublicDecorator'
 import { AuthController } from './controllers/AuthController'
 import { CustomFieldRepository } from './repositories/CustomFieldRepository'
 import { TagController } from './controllers/TagController'
-import { TagService } from './services'
+import { CustomFieldService, TagService } from './services'
 import { TagRepository } from './repositories/TagRepository'
+import { CustomFieldController } from './controllers/CustomFieldController'
 
 @Module({
   imports: [
@@ -40,12 +41,22 @@ import { TagRepository } from './repositories/TagRepository'
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
+        signOptions: { expiresIn: '30m' },
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [UserRecordController, AuthController, TagController],
-  providers: [UserRecordService, UserRecordRepository, UserService, UserRepository, JwtStrategy, CustomFieldRepository, TagService, TagRepository],
+  controllers: [UserRecordController, AuthController, TagController, CustomFieldController],
+  providers: [
+    UserRecordService,
+    UserRecordRepository,
+    UserService,
+    UserRepository,
+    JwtStrategy,
+    CustomFieldRepository,
+    TagService,
+    TagRepository,
+    CustomFieldService,
+  ],
 })
 export class AppModule {}

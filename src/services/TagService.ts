@@ -23,7 +23,7 @@ export class TagService {
     try {
       return await this.tagRepository.createTag(tag)
     } catch (error) {
-      throw new TagOperationException('Failed to create tag')
+      throw new TagOperationException(`Failed to create tag, ${error.message}`)
     }
   }
 
@@ -47,9 +47,6 @@ export class TagService {
     const existingTag = await this.tagRepository.getTagById(tagId)
     if (!existingTag) {
       throw new TagNotFoundException(tagId)
-    }
-    if (existingTag.userId !== userId) {
-      throw new UnauthorizedTagAccessException()
     }
 
     try {

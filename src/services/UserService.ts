@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt'
 import { UserResponse } from '../models/UserResponse'
 import { AccessTokenResponse, TokensResponse } from '../models/TokenResponse'
 import { ConfigService } from '@nestjs/config'
+import { UpdateUser } from '../models'
 
 @Injectable()
 export class UserService {
@@ -31,7 +32,7 @@ export class UserService {
     return await this.userRepository.getUserById(id)
   }
 
-  async updateUser(userId: string, user: Partial<User>): Promise<void> {
+  async updateUser(userId: string, user: UpdateUser): Promise<void> {
     if (user.password) {
       user.password = await bcrypt.hash(user.password, 10)
     }
@@ -52,7 +53,6 @@ export class UserService {
     const tokens = await this.generateTokens(user)
     await this.updateRefreshToken(user.id, tokens.refresh_token)
 
-    // Only return the access token in the response body
     return {
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
@@ -68,7 +68,7 @@ export class UserService {
         },
         {
           secret: this.configService.get('JWT_SECRET'),
-          expiresIn: '15m',
+          expiresIn: '30m',
         },
       ),
       this.jwtService.signAsync(
