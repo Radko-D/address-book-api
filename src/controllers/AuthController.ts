@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, Req, Res, Patch } from '@nestjs/common'
+import { Controller, Post, Body, UnauthorizedException, Req, Res, Patch, Get } from '@nestjs/common'
 import { UserService } from '../services/UserService'
 import { Public } from '../decorators/PublicDecorator'
 import { User } from '../entities'
@@ -91,5 +91,16 @@ export class AuthController {
   @Patch('update')
   async updateUser(@Body() user: UpdateUser, @UserFromRequest('id') userId: string) {
     this.userService.updateUser(userId, user)
+  }
+
+  @Get('current-user')
+  async getCurrentUser(@UserFromRequest('id') userId: string): Promise<Omit<User, 'password' | 'refreshToken'>> {
+    const user = await this.userService.getUserById(userId)
+    if (!user) {
+      throw new UnauthorizedException('User not found')
+    }
+
+    const { password, refreshToken, ...rest } = user
+    return rest
   }
 }
