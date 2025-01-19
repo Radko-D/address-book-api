@@ -47,7 +47,7 @@ export class UserRecord {
   @JoinColumn({ name: 'record_id' })
   customFields: CustomField[]
 
-  @ManyToMany(() => Tag, (tag) => tag.records)
+  @ManyToMany(() => Tag, (tag) => tag.records, {cascade: true})
   @JoinTable({
     name: 'user_record_tags',
     joinColumn: {

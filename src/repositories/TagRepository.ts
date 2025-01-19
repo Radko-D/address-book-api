@@ -66,6 +66,17 @@ export class TagRepository {
 
   async addTagToRecord(tagId: string, recordId: string): Promise<void> {
     try {
+      // First, remove all existing tags from the record
+      await this.repository
+        .createQueryBuilder('tag')
+        .relation(Tag, 'records')
+        .createQueryBuilder()
+        .delete()
+        .from('user_record_tags')
+        .where('user_record_id = :recordId', { recordId })
+        .execute()
+
+      // Then add the new tag
       await this.repository.createQueryBuilder().relation(Tag, 'records').of(tagId).add(recordId)
     } catch (error) {
       throw new TagOperationException('Failed to add tag to record')
