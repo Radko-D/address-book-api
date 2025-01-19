@@ -1,8 +1,10 @@
 import { Repository } from 'typeorm'
 import { UserRecord } from '../entities'
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { FilterQueryResponse } from '../models'
 
+@Injectable()
 export class UserRecordRepository {
   constructor(
     @InjectRepository(UserRecord)
@@ -10,47 +12,54 @@ export class UserRecordRepository {
   ) {}
 
   async getAllUserRecords(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
-    const [records, total] = await this.repository.findAndCount({
-      where: { userId },
-      relations: ['tags', 'customFields'],
-      skip,
-      take: limit,
-    })
-    return { records, total }
+    try {
+      const [records, total] = await this.repository.findAndCount({
+        where: { userId },
+        relations: ['tags', 'customFields'],
+        skip,
+        take: limit,
+      })
+      return { records, total }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch user records')
+    }
   }
 
   async getRecordsWithMostUsedTags(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
-    // Get the top 3 most used tags
-    const topTagsQuery = await this.repository
-      .createQueryBuilder('record')
-      .innerJoinAndSelect('record.tags', 'tag')
-      .select(['tag.id', 'tag.name', 'COUNT(record.id) as usage_count'])
-      .where('record.userId = :userId', { userId })
-      .groupBy('tag.id')
-      .addGroupBy('tag.name')
-      .orderBy('usage_count', 'DESC')
-      .take(3)
-      .getRawMany()
+    try {
+      // Get the top 3 most used tags
+      const topTagsQuery = await this.repository
+        .createQueryBuilder('record')
+        .innerJoinAndSelect('record.tags', 'tag')
+        .select(['tag.id', 'tag.name', 'COUNT(record.id) as usage_count'])
+        .where('record.userId = :userId', { userId })
+        .groupBy('tag.id')
+        .addGroupBy('tag.name')
+        .orderBy('usage_count', 'DESC')
+        .take(3)
+        .getRawMany()
 
-    const tagIds = topTagsQuery.map((tag) => tag.tag_id)
+      const tagIds = topTagsQuery.map((tag) => tag.tag_id)
 
-    // If no tags found, return empty result
-    if (!tagIds.length) {
-      return { records: [], total: 0 }
+      // If no tags found, return empty result
+      if (!tagIds.length) {
+        return { records: [], total: 0 }
+      }
+
+      const [records, total] = await this.repository
+        .createQueryBuilder('record')
+        .leftJoinAndSelect('record.tags', 'tag')
+        .leftJoinAndSelect('record.customFields', 'customFields')
+        .where('record.userId = :userId', { userId })
+        .andWhere('tag.id IN (:...tagIds)', { tagIds })
+        .skip(skip)
+        .take(limit)
+        .getManyAndCount()
+
+      return { records, total }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch records with most used tags')
     }
-
-    // Get records that have any of these tags, including custom fields
-    const [records, total] = await this.repository
-      .createQueryBuilder('record')
-      .leftJoinAndSelect('record.tags', 'tag')
-      .leftJoinAndSelect('record.customFields', 'customFields') // Added custom fields join
-      .where('record.userId = :userId', { userId })
-      .andWhere('tag.id IN (:...tagIds)', { tagIds })
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount()
-
-    return { records, total }
   }
 
   async getRecordsWithSameFirstNameDiffLastName(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
@@ -111,32 +120,75 @@ export class UserRecordRepository {
       relations: ['tags', 'customFields'],
     })
     return { records, total }
-  }
+  }å
 
   async getUserRecordById(id: string, userId: string): Promise<UserRecord> {
-    return this.repository.findOne({ where: { id, userId }, relations: ['tags', 'customFields'] })
+    try {
+      const record = await this.repository.findOne({
+        where: { id, userId },
+        relations: ['tags', 'customFields'],
+      })
+      if (!record) {
+        throw new NotFoundException(`Record with ID ${id} not found`)
+      }
+      return record
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new InternalServerErrorException('Failed to fetch user record')
+    }
   }
 
   async createUserRecord(record: Partial<UserRecord>): Promise<UserRecord> {
-    return this.repository.save(record)
+    try {
+      return await this.repository.save(record)
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create user record')
+    }
   }
 
   async updateUserRecord(id: string, userId: string, record: Partial<UserRecord>): Promise<UserRecord> {
-    const result = await this.repository.update({ id, userId }, record)
-    return result.raw
+    try {
+      const result = await this.repository.update({ id, userId }, record)
+      if (result.affected === 0) {
+        throw new NotFoundException(`Record with ID ${id} not found`)
+      }
+      return result.raw
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new InternalServerErrorException('Failed to update user record')
+    }
   }
 
   async deleteUserRecord(id: string, userId: string): Promise<void> {
-    await this.repository.createQueryBuilder().delete().where('id = :id AND userId = :userId', { id, userId }).execute()
+    try {
+      const result = await this.repository.createQueryBuilder().delete().where('id = :id AND userId = :userId', { id, userId }).execute()
+
+      if (result.affected === 0) {
+        throw new NotFoundException(`Record with ID ${id} not found`)
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new InternalServerErrorException('Failed to delete user record')
+    }
   }
 
   async getAllRecordsForExport(userId: string): Promise<UserRecord[]> {
-    return await this.repository.find({
-      where: { userId },
-      relations: ['tags', 'customFields'],
-      order: {
-        createdAt: 'DESC',
-      },
-    })
+    try {
+      return await this.repository.find({
+        where: { userId },
+        relations: ['tags', 'customFields'],
+        order: {
+          createdAt: 'DESC',
+        },
+      })
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch records for export')
+    }
   }
 }

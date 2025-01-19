@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { UserRecord } from '../entities'
 import { UserRecordRepository } from '../repositories'
 import { TagService } from './TagService'
@@ -29,7 +29,7 @@ export class UserRecordService {
       return await this.userRecordRepository.getRecordsWithSameLastNameDiffFirstName(userId, skip, params.limit)
     }
 
-    if (params.firstName && params.lastName) {
+    if (params.firstName || params.lastName) {
       return await this.userRecordRepository.getRecordsByFullName(userId, params.firstName, params.lastName)
     }
 
@@ -57,37 +57,32 @@ export class UserRecordService {
   }
 
   async exportRecords(userId: string, format: ExportFormat, response: Response): Promise<void> {
-    const records = await this.userRecordRepository.getAllRecordsForExport(userId)
-    const processedRecords = records.map((record) => this.processRecordForExport(record))
+    try {
+      const records = await this.userRecordRepository.getAllRecordsForExport(userId)
+      if (!records || records.length === 0) {
+        throw new InternalServerErrorException('No records found to export')
+      }
 
-    switch (format) {
-      case 'csv':
-        await this.exportToCsv(processedRecords, response)
-        break
-      case 'json':
-        await this.exportToJson(processedRecords, response)
-        break
-      case 'xlsx':
-        await this.exportToExcel(processedRecords, response)
-        break
-    }
-  }
+      const processedRecords = records.map((record) => this.processRecordForExport(record))
 
-  private processRecordForExport(record: UserRecord) {
-    return {
-      'First Name': record.firstName,
-      'Last Name': record.lastName || '',
-      Company: record.companyName || '',
-      Address: record.address || '',
-      Phone: record.phoneNumber,
-      Email: record.email || '',
-      Fax: record.faxNumber || '',
-      Mobile: record.mobilePhoneNumber || '',
-      Comment: record.comment || '',
-      Tags: record.tags?.map((tag) => tag.name).join(', ') || '',
-      'Custom Fields': record.customFields?.map((field) => `${field.name}: ${field.value}`).join('; ') || '',
-      'Created At': record.createdAt.toISOString(),
-      'Updated At': record.updatedAt.toISOString(),
+      switch (format) {
+        case 'csv':
+          await this.exportToCsv(processedRecords, response)
+          break
+        case 'json':
+          await this.exportToJson(processedRecords, response)
+          break
+        case 'xlsx':
+          await this.exportToExcel(processedRecords, response)
+          break
+        default:
+          throw new InternalServerErrorException('Unsupported export format')
+      }
+    } catch (error) {
+      if (error instanceof InternalServerErrorException) {
+        throw error
+      }
+      throw new InternalServerErrorException(`Failed to export records: ${error.message}`)
     }
   }
 
@@ -99,35 +94,66 @@ export class UserRecordService {
       })
 
       stringifier
+        .on('error', (error) => {
+          reject(new InternalServerErrorException(`Failed to generate CSV: ${error.message}`))
+        })
         .pipe(response)
         .on('finish', () => resolve())
-        .on('error', (error) => reject(error))
+        .on('error', (error) => {
+          reject(new InternalServerErrorException(`Failed to write CSV to response: ${error.message}`))
+        })
     })
   }
 
   private async exportToJson(records: any[], response: Response): Promise<void> {
-    response.write(JSON.stringify(records))
-    response.end()
+    try {
+      response.write(JSON.stringify(records))
+      response.end()
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to export JSON: ${error.message}`)
+    }
   }
 
   private async exportToExcel(records: any[], response: Response): Promise<void> {
-    // Create a new workbook and worksheet
-    const workbook = XLSX.utils.book_new()
-    const worksheet = XLSX.utils.json_to_sheet(records, {
-      header: Object.keys(records[0]),
-    })
+    try {
+      const workbook = XLSX.utils.book_new()
+      const worksheet = XLSX.utils.json_to_sheet(records, {
+        header: Object.keys(records[0]),
+      })
 
-    // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'User Records')
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'User Records')
 
-    // Write the workbook to a buffer
-    const buffer = XLSX.write(workbook, {
-      type: 'buffer',
-      bookType: 'xlsx',
-      bookSST: false,
-    })
+      const buffer = XLSX.write(workbook, {
+        type: 'buffer',
+        bookType: 'xlsx',
+        bookSST: false,
+      })
 
-    // Send the buffer as the response
-    response.send(buffer)
+      response.send(buffer)
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to export Excel: ${error.message}`)
+    }
+  }
+
+  private processRecordForExport(record: UserRecord) {
+    try {
+      return {
+        'First Name': record.firstName,
+        'Last Name': record.lastName || '',
+        Company: record.companyName || '',
+        Address: record.address || '',
+        Phone: record.phoneNumber,
+        Email: record.email || '',
+        Fax: record.faxNumber || '',
+        Mobile: record.mobilePhoneNumber || '',
+        Comment: record.comment || '',
+        Tags: record.tags?.map((tag) => tag.name).join(', ') || '',
+        'Custom Fields': record.customFields?.map((field) => `${field.name}: ${field.value}`).join('; ') || '',
+        'Created At': record.createdAt.toISOString(),
+        'Updated At': record.updatedAt.toISOString(),
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to process record for export: ${error.message}`)
+    }
   }
 }
