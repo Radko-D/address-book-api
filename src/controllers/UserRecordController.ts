@@ -2,7 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Get, Header, Param, Post
 import { UserRecord } from '../entities'
 import { UserRecordService } from '../services/UserRecordService'
 import { UserFromRequest } from '../decorators/UserDecorator'
-import { CreateUserRecord, ExportFormat, UpdateUserRecord } from '../models'
+import { CreateUserRecord, ExportFormat, FilterQueryResponse, UpdateUserRecord } from '../models'
 import { Response } from 'express'
 
 @Controller('api/user-record')
@@ -19,7 +19,7 @@ export class UserRecordController {
     @Query('lastName') lastName?: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<{ records: UserRecord[]; total: number }> {
+  ): Promise<FilterQueryResponse> {
     return await this.userRecordService.getAllRecords(userId, {
       mostUsedTags,
       sameFirstNameDiffLastName,

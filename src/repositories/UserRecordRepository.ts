@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm'
 import { UserRecord } from '../entities'
 import { InjectRepository } from '@nestjs/typeorm'
+import { FilterQueryResponse } from '../models'
 
 export class UserRecordRepository {
   constructor(
@@ -8,7 +9,7 @@ export class UserRecordRepository {
     private readonly repository: Repository<UserRecord>,
   ) {}
 
-  async getAllUserRecords(userId: string, skip: number = 0, limit: number = 10): Promise<{ records: UserRecord[]; total: number }> {
+  async getAllUserRecords(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
     const [records, total] = await this.repository.findAndCount({
       where: { userId },
       relations: ['tags', 'customFields'],
@@ -18,23 +19,31 @@ export class UserRecordRepository {
     return { records, total }
   }
 
-  async getRecordsWithMostUsedTags(userId: string, skip: number = 0, limit: number = 10): Promise<{ records: UserRecord[]; total: number }> {
+  async getRecordsWithMostUsedTags(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
     // Get the top 3 most used tags
-    const topTags = await this.repository
+    const topTagsQuery = await this.repository
       .createQueryBuilder('record')
       .innerJoinAndSelect('record.tags', 'tag')
+      .select(['tag.id', 'tag.name', 'COUNT(record.id) as usage_count'])
       .where('record.userId = :userId', { userId })
       .groupBy('tag.id')
-      .orderBy('COUNT(record.id)', 'DESC')
+      .addGroupBy('tag.name')
+      .orderBy('usage_count', 'DESC')
       .take(3)
-      .getMany()
+      .getRawMany()
 
-    const tagIds = topTags.map((tag) => tag.id)
+    const tagIds = topTagsQuery.map((tag) => tag.tag_id)
 
-    // Get records that have any of these tags
+    // If no tags found, return empty result
+    if (!tagIds.length) {
+      return { records: [], total: 0 }
+    }
+
+    // Get records that have any of these tags, including custom fields
     const [records, total] = await this.repository
       .createQueryBuilder('record')
-      .innerJoinAndSelect('record.tags', 'tag')
+      .leftJoinAndSelect('record.tags', 'tag')
+      .leftJoinAndSelect('record.customFields', 'customFields') // Added custom fields join
       .where('record.userId = :userId', { userId })
       .andWhere('tag.id IN (:...tagIds)', { tagIds })
       .skip(skip)
@@ -44,13 +53,11 @@ export class UserRecordRepository {
     return { records, total }
   }
 
-  async getRecordsWithSameFirstNameDiffLastName(
-    userId: string,
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ records: UserRecord[]; total: number }> {
+  async getRecordsWithSameFirstNameDiffLastName(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
     const [records, total] = await this.repository
       .createQueryBuilder('record')
+      .leftJoinAndSelect('record.tags', 'tags')
+      .leftJoinAndSelect('record.customFields', 'customFields')
       .where('record.userId = :userId', { userId })
       .andWhere((qb) => {
         const subQuery = qb
@@ -70,13 +77,11 @@ export class UserRecordRepository {
     return { records, total }
   }
 
-  async getRecordsWithSameLastNameDiffFirstName(
-    userId: string,
-    skip: number = 0,
-    limit: number = 10,
-  ): Promise<{ records: UserRecord[]; total: number }> {
+  async getRecordsWithSameLastNameDiffFirstName(userId: string, skip: number = 0, limit: number = 10): Promise<FilterQueryResponse> {
     const [records, total] = await this.repository
       .createQueryBuilder('record')
+      .leftJoinAndSelect('record.tags', 'tags')
+      .leftJoinAndSelect('record.customFields', 'customFields')
       .where('record.userId = :userId', { userId })
       .andWhere((qb) => {
         const subQuery = qb
@@ -96,7 +101,7 @@ export class UserRecordRepository {
     return { records, total }
   }
 
-  async getRecordsByFullName(userId: string, firstName: string, lastName: string): Promise<{ records: UserRecord[]; total: number }> {
+  async getRecordsByFullName(userId: string, firstName: string, lastName: string): Promise<FilterQueryResponse> {
     const [records, total] = await this.repository.findAndCount({
       where: {
         userId,

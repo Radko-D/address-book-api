@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { UserRecord } from '../entities'
 import { UserRecordRepository } from '../repositories'
 import { TagService } from './TagService'
-import { ExportFormat, QueryParams } from '../models'
+import { ExportFormat, FilterQueryResponse, QueryParams } from '../models'
 import { stringify } from 'csv-stringify'
 import * as XLSX from 'xlsx'
 import { Response } from 'express'
@@ -14,7 +14,7 @@ export class UserRecordService {
     private readonly tagService: TagService,
   ) {}
 
-  async getAllRecords(userId: string, params: QueryParams): Promise<{ records: UserRecord[]; total: number }> {
+  async getAllRecords(userId: string, params: QueryParams): Promise<FilterQueryResponse> {
     const skip = (params.page - 1) * params.limit
 
     if (params.mostUsedTags) {
