@@ -40,19 +40,39 @@ export class UserRecordService {
     return await this.userRecordRepository.getUserRecordById(recordId, userId)
   }
 
+  private trimStringFields(record: Partial<UserRecord>): Partial<UserRecord> {
+    const trimmedRecord: Partial<UserRecord> = { ...record }
+
+    // List of string field keys in UserRecord
+    const stringFields = ['firstName', 'lastName', 'companyName', 'address', 'phoneNumber', 'email', 'faxNumber', 'mobilePhoneNumber', 'comment']
+
+    // Trim each string field if it exists
+    stringFields.forEach((field) => {
+      if (trimmedRecord[field] !== undefined && trimmedRecord[field] !== null) {
+        trimmedRecord[field] = trimmedRecord[field].toString().trim()
+      }
+    })
+
+    return trimmedRecord
+  }
+
   async createRecord(record: Partial<UserRecord>, tagId?: string): Promise<UserRecord> {
-    const fullRecord = await this.userRecordRepository.createUserRecord(record)
-    if (tagId) {
-      await this.tagService.addTagToRecord(tagId, fullRecord.id, record.userId)
+    const trimmedRecord = this.trimStringFields(record)
+    const fullRecord = await this.userRecordRepository.createUserRecord(trimmedRecord)
+
+    if (tagId?.trim()) {
+      await this.tagService.addTagToRecord(tagId.trim(), fullRecord.id, record.userId)
     }
+
     return fullRecord
   }
 
   async updateRecord(recordId: string, userId: string, record: Partial<UserRecord>, tagId?: string): Promise<void> {
-    await this.userRecordRepository.updateUserRecord(recordId, userId, record)
+    const trimmedRecord = this.trimStringFields(record)
+    await this.userRecordRepository.updateUserRecord(recordId, userId, trimmedRecord)
 
-    if (tagId) {
-      await this.tagService.addTagToRecord(tagId, recordId, userId)
+    if (tagId?.trim()) {
+      await this.tagService.addTagToRecord(tagId.trim(), recordId, userId)
     }
   }
 
