@@ -30,7 +30,7 @@ export class UserRecordService {
     }
 
     if (params.firstName || params.lastName) {
-      return await this.userRecordRepository.getRecordsByFullName(userId, params.firstName, params.lastName)
+      return await this.userRecordRepository.getRecordsByFullName(userId, params.firstName, params.lastName, skip, params.limit)
     }
 
     return await this.userRecordRepository.getAllUserRecords(userId, skip, params.limit)

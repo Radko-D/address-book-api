@@ -110,7 +110,7 @@ export class UserRecordRepository {
     return { records, total }
   }
 
-  async getRecordsByFullName(userId: string, firstName: string, lastName: string): Promise<FilterQueryResponse> {
+  async getRecordsByFullName(userId: string, firstName: string, lastName: string, skip?: number, limit?: number): Promise<FilterQueryResponse> {
     const [records, total] = await this.repository.findAndCount({
       where: {
         userId,
@@ -118,9 +118,11 @@ export class UserRecordRepository {
         lastName,
       },
       relations: ['tags', 'customFields'],
+      skip,
+      take: limit,
     })
     return { records, total }
-  }å
+  }
 
   async getUserRecordById(id: string, userId: string): Promise<UserRecord> {
     try {
