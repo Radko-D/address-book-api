@@ -48,8 +48,12 @@ export class UserRecordService {
     return fullRecord
   }
 
-  async updateRecord(recordId: string, userId: string, record: Partial<UserRecord>): Promise<void> {
+  async updateRecord(recordId: string, userId: string, record: Partial<UserRecord>, tagId?: string): Promise<void> {
     await this.userRecordRepository.updateUserRecord(recordId, userId, record)
+
+    if (tagId) {
+      await this.tagService.addTagToRecord(tagId, recordId, userId)
+    }
   }
 
   async deleteRecord(recordId: string, userId: string): Promise<void> {

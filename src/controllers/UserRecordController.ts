@@ -44,7 +44,7 @@ export class UserRecordController {
 
   @Post('update/:recordId')
   async updateRecord(@Body() record: UpdateUserRecord, @UserFromRequest('id') userId: string, @Param('recordId') recordId: string): Promise<void> {
-    await this.userRecordService.updateRecord(recordId, userId, record)
+    await this.userRecordService.updateRecord(recordId, userId, record.updatedRecord)
   }
 
   @Get('export-records')
