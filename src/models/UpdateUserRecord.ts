@@ -11,7 +11,6 @@ export class UpdateUserRecord {
     faxNumber?: string
     mobilePhoneNumber?: string
     comment?: string
-    customFields?: CustomField[]
   }
   tagId?: string
 }

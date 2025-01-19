@@ -71,7 +71,7 @@ export class UserRecordService {
     const trimmedRecord = this.trimStringFields(record)
     await this.userRecordRepository.updateUserRecord(recordId, userId, trimmedRecord)
 
-    if (tagId?.trim()) {
+    if (tagId) {
       await this.tagService.addTagToRecord(tagId.trim(), recordId, userId)
     }
   }
